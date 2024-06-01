@@ -29,9 +29,9 @@ typedef struct {
 }Personagem;
 
 typedef struct {
-    Personagem personagens[405];
-    int n;
-} listPersonagens;
+    Personagem personagens[6];
+    int primeiro, ultimo;
+} filaPersonagens;
 
 
 Personagem construtor(char*, char*, char*, char*, char*, char*, char*, bool, bool, char*, bool, char*,
@@ -114,88 +114,56 @@ char **ler(char*);
 void PreencherVetor(Personagem*);
 
 //--------------------Metodos Lista --------------------------------//
-listPersonagens *init(){
-    listPersonagens *lista = (listPersonagens*) malloc(sizeof(listPersonagens));
-    lista->n = 0;
-    return lista;
+filaPersonagens *init(){
+    filaPersonagens *fila = (filaPersonagens*) malloc(sizeof(filaPersonagens));
+    fila->primeiro = 0;
+    fila->ultimo = 0;
+    return fila;
 }
 
-void inserirInicio(listPersonagens *lista, Personagem personagem){
-    if(lista->n >= 405){
-        printf("Sem espaço para inserção na lista\n");
-    }else{
-        for(int i = lista->n; i > 0; i--){
-            lista->personagens[i] = lista->personagens[i-1];
-        }
-        lista->personagens[0] = personagem;
-        lista->n++;
-    }
-}
-
-void inserir(listPersonagens *lista, Personagem personagem, int pos){
-    if(lista->n >= 405 || pos > lista->n){
-        printf("Sem espaço para inserção na lista ou posição inválida\n");
-    }else{
-        for(int i = lista->n; i > pos; i--){
-            lista->personagens[i] = lista->personagens[i-1];
-        }
-        lista->personagens[pos] = personagem;
-        lista->n++;
-    }
-}
-
-void inserirFim(listPersonagens *lista, Personagem personagem){
-    if(lista->n >= 405){
-        printf("Sem espaço para inserção na lista\n");
-    }else{
-        lista->personagens[lista->n] = personagem;
-        lista->n++;
-    }
-}
-
-Personagem removerInicio(listPersonagens *lista){
-    if(lista->n == 0){
+Personagem remover(filaPersonagens *fila){
+    if(fila->primeiro == fila->ultimo){
         printf("Sem itens para remover\n");
         return construtor_vazio(); // Retornar um valor padrão ou nulo para Personagem
     }else{
-        Personagem tmp = lista->personagens[0];
-        for(int i = 0; i < lista->n - 1; i++){
-            lista->personagens[i] = lista->personagens[i+1];
-        }
-        lista->n--;
+        Personagem tmp = fila->personagens[fila->primeiro];
+        
+        fila->primeiro = (fila->primeiro + 1) % 6;
         return tmp;
     }
 }
 
-Personagem remover(listPersonagens *lista, int pos){
-    if(lista->n == 0 || pos < 0 || pos >= lista->n){
-        printf("Remoção inválida\n");
-        return construtor_vazio(); // Retornar um valor padrão ou nulo para Personagem
-    }else{
-        Personagem tmp = lista->personagens[pos];
-        for(int i = pos; i < lista->n - 1; i++){
-            lista->personagens[i] = lista->personagens[i+1];
-        }
-        lista->n--;
-        return tmp;
+void mediaYearOfBirth(filaPersonagens *fila){
+    int soma = 0;
+    int j = 0;
+    for(int i = fila->primeiro; i != fila->ultimo; i = (i+1) % 6){
+        soma += fila->personagens[i].yearOfBirth;
+        j++;
     }
+
+    printf(">> Year Birthday Average: %d\n", soma/j);
 }
 
-Personagem removerFim(listPersonagens *lista){
-    if(lista->n == 0){
-        printf("Sem itens para remover\n");
-        return construtor_vazio(); // Retornar um valor padrão ou nulo para Personagem
-    }else{
-        lista->n--;
-        return lista->personagens[lista->n];
+void inserir(filaPersonagens *fila, Personagem personagem){
+    if(((fila->ultimo + 1) % 6) == fila->primeiro){
+        //printf("Sem espaço para inserção na fila\n");
+        Personagem result = remover(fila);
     }
+
+    fila->personagens[fila->ultimo] = personagem;
+    fila->ultimo = ((fila->ultimo + 1) % 6);
+
+    mediaYearOfBirth(fila);
 }
 
-void imprimirLista(listPersonagens *lista){
-    for(int i = 0; i < lista->n; i++){
-        printf("[%d ## ", i);
-        imprimir(&lista->personagens[i]);
+void imprimirFila(filaPersonagens *fila){
+
+    printf("[Head]\n");
+    for(int i = fila->primeiro, j = 0; i != fila->ultimo; i = (i+1) % 6, j++){
+        printf("[%d ## ", j);
+        imprimir(&fila->personagens[i]);
     }
+    printf("[Tail]");
 }
 
 //------------------------------------------------------------------//
@@ -222,7 +190,7 @@ int main(){
     PreencherVetor(personagens);
     //printf("Iniciou");
 
-    listPersonagens *lista = init();
+    filaPersonagens *fila = init();
 
     scanf("%s", id);
     
@@ -233,7 +201,7 @@ int main(){
             result = strcmp(personagens[i].id,id);
             
             if( result == 0){
-                inserirFim(lista, personagens[i]);
+                inserir(fila, personagens[i]);
                 i = 500;
             }
         }
@@ -241,7 +209,6 @@ int main(){
     }
 
     scanf("%d", &numComands);
-    //printf("%d", numComands);
     fgets(lixo,sizeof(lixo),stdin);
     
     //leitura comandos
@@ -249,7 +216,7 @@ int main(){
 
         //scanf("%99[^\n]%*c", comando);
         fgets(comando, sizeof(comando), stdin);
-        
+
         if(i != numComands-1){
             comando[strlen(comando) - 1] = '\0';
         }
@@ -261,52 +228,24 @@ int main(){
         //---------------//
         
         //Verificação do comando desejado//
-        if(strcmp(divComandos[0], "II") == 0){
+        if(strcmp(divComandos[0], "I") == 0){
             for(int j = 0; j < 405; j++){
                 if(strcmp(personagens[j].id,divComandos[1]) == 0){
-                    inserirInicio(lista, personagens[j]);
+                    inserir(fila, personagens[j]);
                     j = 500;
                 }
             }
         }
 
-        if(strcmp(divComandos[0], "IF") == 0){
-            for(int j = 0; j < 405; j++){
-                if(strcmp(personagens[j].id,divComandos[1]) == 0){
-                    inserirFim(lista, personagens[j]);
-                    j = 500;
-                }
-            }
-        }
-
-        if(strcmp(divComandos[0], "I*") == 0){
-            for(int j = 0; j < 405; j++){
-                if(strcmp(personagens[j].id,divComandos[2]) == 0){
-                    inserir(lista, personagens[j],atoi(divComandos[1]));
-                    j = 500;
-                }
-            }
-        }
-
-        if(strcmp(divComandos[0], "RI") == 0){
-            Personagem tmp = removerInicio(lista);
-            printf("(R) %s\n", tmp.name);
-        }
-
-        if(strcmp(divComandos[0], "RF") == 0){
-            Personagem tmp = removerFim(lista);
-            printf("(R) %s\n", tmp.name);
-        }
-
-        if(strcmp(divComandos[0], "R*") == 0){
-            Personagem tmp = remover(lista, atoi(divComandos[1]));
+        if(strcmp(divComandos[0], "R") == 0){
+            Personagem tmp = remover(fila);
             printf("(R) %s\n", tmp.name);
         }
     }
 
-    imprimirLista(lista);
+    imprimirFila(fila);
 
-    free(lista);
+    free(fila);
 }
 
 Personagem construtor(char id[], char name[], char alternate_names[], char house[], char ancestry[], char species[], char patronus[], bool hogwartsStaff, bool hogwartsStudent, char actorName[], bool alive, char dateOfBirth[],
