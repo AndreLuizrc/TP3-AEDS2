@@ -114,9 +114,9 @@ char **ler(char*);
 void PreencherVetor(Personagem*);
 
 //--------------------Metodos Lista --------------------------------//
-/*listPersonagens init(){
-    listPersonagens lista;
-    lista.n = 0;
+listPersonagens *init(){
+    listPersonagens *lista = (listPersonagens*) malloc(sizeof(listPersonagens));
+    lista->n = 0;
     return lista;
 }
 
@@ -193,38 +193,117 @@ Personagem removerFim(listPersonagens *lista){
 
 void imprimirLista(listPersonagens *lista){
     for(int i = 0; i < lista->n; i++){
+        printf("[%d ## ", i);
         imprimir(&lista->personagens[i]);
     }
-}*/
+}
 
 //------------------------------------------------------------------//
+void divComando(char *divComandos[], char comando[]){
+    int i = 0;
 
+    // Obtém o primeiro token
+    divComandos[i] = strtok(comando, " ");
+
+    // Caminha pelos outros tokens
+    while (divComandos[i] != NULL && i < 3) {
+        i++;
+        divComandos[i] = strtok(NULL, " ");
+    }
+}
 
 int main(){
     char id[200];
     int result;
+    int numComands;
+    char comando[200];
+    char lixo[200];
     Personagem personagens[405];
     PreencherVetor(personagens);
-    printf("Iniciou");
+    //printf("Iniciou");
 
-    //listPersonagens lista = init();
+    listPersonagens *lista = init();
 
     scanf("%s", id);
     
+    //leitura ids
     while(strcmp(id, "FIM") != 0){
         for(int i = 0; i < 405; i++){
             
             result = strcmp(personagens[i].id,id);
             
             if( result == 0){
-                //inserirFim(&lista, personagens[i]);
+                inserirFim(lista, personagens[i]);
                 i = 500;
             }
         }
         scanf("%s", id);
     }
 
-    //imprimirLista(&lista);
+    scanf("%d", &numComands);
+    //printf("%d", numComands);
+    fgets(lixo,sizeof(lixo),stdin);
+    
+    //leitura comandos
+    for(int i = 0; i < numComands; i++){
+
+        //scanf("%99[^\n]%*c", comando);
+        fgets(comando, sizeof(comando), stdin);
+        comando[strlen(comando) - 1] = '\0';
+        //comando[strcspn(comando, "\r")] = '\0';
+
+        //dividir comando//
+        char *divComandos[3];
+        divComando(divComandos, comando);
+        //---------------//
+        
+        //Verificação do comando desejado//
+        if(strcmp(divComandos[0], "II") == 0){
+            for(int j = 0; j < 405; j++){
+                if(strcmp(personagens[j].id,divComandos[1]) == 0){
+                    inserirInicio(lista, personagens[j]);
+                    j = 500;
+                }
+            }
+        }
+
+        if(strcmp(divComandos[0], "IF") == 0){
+            for(int j = 0; j < 405; j++){
+                if(strcmp(personagens[j].id,divComandos[1]) == 0){
+                    inserirFim(lista, personagens[j]);
+                    j = 500;
+                }
+            }
+        }
+
+        if(strcmp(divComandos[0], "I*") == 0){
+            for(int j = 0; j < 405; j++){
+                if(strcmp(personagens[j].id,divComandos[2]) == 0){
+                    inserir(lista, personagens[j],atoi(divComandos[1]));
+                    j = 500;
+                }
+            }
+        }
+
+        if(strcmp(divComandos[0], "RI") == 0){
+            Personagem tmp = removerInicio(lista);
+            printf("(R) %s\n", tmp.name);
+        }
+
+        if(strcmp(divComandos[0], "RF") == 0){
+            Personagem tmp = removerFim(lista);
+            printf("(R) %s\n", tmp.name);
+        }
+
+        if(strcmp(divComandos[0], "R*") == 0){
+            Personagem tmp = remover(lista, atoi(divComandos[1]));
+            printf("(R) %s\n", tmp.name);
+        }
+    }
+
+    imprimirLista(lista);
+
+    free(lista);
 }
 
 Personagem construtor(char id[], char name[], char alternate_names[], char house[], char ancestry[], char species[], char patronus[], bool hogwartsStaff, bool hogwartsStudent, char actorName[], bool alive, char dateOfBirth[],
@@ -307,7 +386,7 @@ char **ler(char line[]){
 }
 
 void imprimir(Personagem *P){
-    printf("[%s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %d ## %s ## %s ## %s ## %s]\n",
+    printf("%s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %d ## %s ## %s ## %s ## %s]\n",
      P->id, P->name, P->alternate_names.Lista, P->house, P->ancestry, P->species, P->patronus,
      P->hogwartsStaff == 1? "true": "false", P->hogwartsStudent == 1? "true": "false", P->actorName, P->alive == 1? "true": "false", P->dateOfBirth, P->yearOfBirth, P->eyeColour, P->gender, P->hairColor, P->wizard == 1? "true": "false") ;
 }
@@ -315,7 +394,7 @@ void imprimir(Personagem *P){
 void PreencherVetor(Personagem personagens[]){
     FILE *arquivo_csv;
     char line[1200];
-    if((arquivo_csv = fopen("./characters.csv", "r")) != NULL){
+    if((arquivo_csv = fopen("/tmp/characters.csv", "r")) != NULL){
         
         int i = 0;
         int tam_lista;
