@@ -28,9 +28,16 @@ typedef struct {
     
 }Personagem;
 
+typedef struct Celula Celula;
+
+struct Celula{
+    Personagem personagem;
+    Celula *prox;
+};
+
 typedef struct {
-    Personagem personagens[6];
-    int primeiro, ultimo;
+    Celula *primeiro, *ultimo;
+    int n;
 } filaPersonagens;
 
 
@@ -113,57 +120,76 @@ char **ler(char*);
 
 void PreencherVetor(Personagem*);
 
+//-------------------Metodos Celula -------------------------------//
+Celula *novaCelula(Personagem Personagem){
+    Celula *nova = (Celula*) malloc(sizeof(Celula));
+    nova->personagem = Personagem;
+    nova->prox = NULL;
+
+    return nova;
+}
+
 //--------------------Metodos Lista --------------------------------//
 filaPersonagens *init(){
     filaPersonagens *fila = (filaPersonagens*) malloc(sizeof(filaPersonagens));
-    fila->primeiro = 0;
-    fila->ultimo = 0;
+    fila->primeiro = novaCelula(construtor_vazio());
+    fila->ultimo = fila->primeiro;
+    fila->n = 0;
     return fila;
 }
 
 Personagem remover(filaPersonagens *fila){
-    if(fila->primeiro == fila->ultimo){
+    if(fila->n == 0){
         printf("Sem itens para remover\n");
         return construtor_vazio(); // Retornar um valor padrão ou nulo para Personagem
     }else{
-        Personagem tmp = fila->personagens[fila->primeiro];
-        
-        fila->primeiro = (fila->primeiro + 1) % 6;
-        return tmp;
+        Celula *tmp = fila->primeiro;
+        fila->primeiro = fila->primeiro->prox;
+        Personagem result = fila->primeiro->personagem;
+        fila->n--;
+        free(tmp);
+
+        return result;
     }
 }
 
 void mediaYearOfBirth(filaPersonagens *fila){
     int soma = 0;
     int j = 0;
-    for(int i = fila->primeiro; i != fila->ultimo; i = (i+1) % 6){
-        soma += fila->personagens[i].yearOfBirth;
+    for(Celula *i = fila->primeiro->prox; i != NULL; i = i->prox){
+        soma += i->personagem.yearOfBirth;
         j++;
     }
 
     printf(">> Year Birthday Average: %d\n", soma/j);
+    //free(i);
 }
 
 void inserir(filaPersonagens *fila, Personagem personagem){
-    if(((fila->ultimo + 1) % 6) == fila->primeiro){
+    if(fila->n >= 5){
         //printf("Sem espaço para inserção na fila\n");
         Personagem result = remover(fila);
     }
-
-    fila->personagens[fila->ultimo] = personagem;
-    fila->ultimo = ((fila->ultimo + 1) % 6);
+    
+    fila->ultimo->prox = novaCelula(personagem);
+    fila->ultimo = fila->ultimo->prox;
+    fila->n++;
 
     mediaYearOfBirth(fila);
+    
 }
 
 void imprimirFila(filaPersonagens *fila){
 
     printf("[Head]\n");
-    for(int i = fila->primeiro, j = 0; i != fila->ultimo; i = (i+1) % 6, j++){
+    Celula *i;
+    int j;
+    for(i = fila->primeiro->prox, j = 0; i != NULL; i = i->prox, j++){
         printf("[%d ## ", j);
-        imprimir(&fila->personagens[i]);
+        imprimir(&i->personagem);
     }
     printf("[Tail]");
+    free(i);
 }
 
 //------------------------------------------------------------------//
@@ -212,7 +238,6 @@ int main(){
 
     //Para rodar no Verde "scanf("%99[^\n]%*c", lixo);"
     scanf("%99[^\n]%*c", lixo);
-
     //fgets(lixo,sizeof(lixo),stdin);
     
     //leitura comandos
