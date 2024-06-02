@@ -1,6 +1,10 @@
-package Questao3;
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,44 +44,160 @@ class Lista {
     }
 }
 
-class PilhaPersonagens {
-    private Personagem[] personagens;
-    private int topo;
+class Celula{
+    public Personagem personagem;
+    public Celula prox, ant;
 
-    PilhaPersonagens(){
-        personagens = new Personagem[405];
-        topo = 0;
+    public Celula(){
+        this.personagem = null;
+        this.prox = null;
+        this.ant = null;
     }
 
-    PilhaPersonagens(int tam){
-        personagens = new Personagem[tam];
-        topo = 0;
+    public Celula(Personagem personagem){
+        this.personagem = personagem;
+        this.prox = null;
+        this.ant = null;
+    }
+}
+
+class ListPersonagens {
+    public Celula primeiro, ultimo;
+
+    ListPersonagens(){
+        primeiro = new Celula();
+        ultimo = primeiro;
     }
 
-    void inserir(Personagem personagem) throws Exception{
-        if(topo >= personagens.length){
-            throw new Exception("Lista cheia");
+    public void inserirInicio(Personagem personagem){
+
+        Celula tmp = new Celula(personagem);
+
+        tmp.prox = primeiro.prox;
+        primeiro.prox = tmp;
+        tmp.ant = primeiro;
+        tmp.prox.ant = tmp;
+
+        if(primeiro == ultimo){
+            ultimo = tmp;
         }
 
-        personagens[topo] = personagem;
-        topo++;
+        tmp = null;
     }
 
-    Personagem remover() throws Exception{
-        if(topo == 0){
-            throw new Exception("Sem itens para remover!");
+    public void inserir(Personagem personagem, int pos) throws Exception{
+
+        int tamanho = tamanho();
+        if(pos < 0 || pos > tamanho){
+            throw new Exception("Posição invalida");
+        }else if(pos == 0){
+            inserirInicio(personagem);
+        }else if(pos == tamanho){
+            inserirFim(personagem);
+        }else{
+            Celula i = primeiro;
+
+            for(int j = 0; j < pos; i = i.prox, j++);
+
+            Celula tmp = new Celula(personagem);
+            tmp.prox = i.prox;
+            i.prox = tmp;
+            tmp.ant = i;
+            tmp.prox.ant = tmp;
+
+            i = tmp = null;
         }
 
-        topo--;
-        return personagens[topo];
     }
 
-    void imprimir(){
-        System.out.println("[ Top ]");
-        for(int i = topo-1, cont = 0; i >= 0; i--, cont++){
-           System.out.println("["+ cont +" "+ personagens[i].getAtributoString());
+    public void inserirFim(Personagem personagem){
+        
+        Celula tmp = new Celula(personagem);
+
+        ultimo.prox = tmp;
+        tmp.ant = ultimo;
+        ultimo = tmp;
+        tmp = null;
+    }
+
+    public Personagem removerInicio() throws Exception{
+
+        if(primeiro == ultimo){
+            throw new Exception("Sem itens para remover");
         }
-        System.out.println("[ Bottom ]");
+
+        Celula tmp = primeiro;
+        primeiro = primeiro.prox;
+        tmp.prox = null;
+        primeiro.ant = null;
+        tmp = null;
+
+        return primeiro.personagem;
+    }
+
+    public Personagem remover(int pos) throws Exception{
+
+        int tamanho = tamanho();
+        Personagem result;
+        if(pos < 0 || pos >  tamanho || ultimo == primeiro){
+            throw new Exception("Posição invaldia");
+        }else if(pos == 0){
+            result = removerInicio();
+        }else if(pos == tamanho){
+            result = removerFim();
+        }else{
+
+            Celula i = primeiro;
+
+            for(int j = 0; j < pos; j++, i = i.prox);
+
+            Celula tmp = i.prox;
+            result = tmp.personagem;
+            i.prox = tmp.prox;
+            i.prox.ant = i;
+            tmp.prox = null;
+            tmp.ant = null;
+            tmp = null;
+
+        }
+        return result;
+    }
+
+    public Personagem removerFim() throws Exception{
+
+        Personagem result;
+        if (primeiro == ultimo) {
+            throw new Exception("Sem itens para remover");
+        }
+
+        Celula i = ultimo;
+        result = ultimo.personagem;
+        ultimo = ultimo.ant;
+        ultimo.prox = null;
+        i.ant = null;
+
+        i = null;
+
+        return result;
+    }
+
+    public int tamanho(){
+        int tam = 0;
+        for(Celula i = primeiro; i != ultimo; i = i.prox, tam++);
+        return tam;
+    }
+
+    public Personagem getPersonagem(int pos){
+        Celula tmp = primeiro;
+        for(int i = 0; i <= pos; i++, tmp = tmp.prox);
+        return tmp.personagem;
+    }
+
+    public void imprimir(){
+        
+        for(Celula i = primeiro.prox; i != null; i = i.prox){
+           i.personagem.imprimir();
+        }
     }
 }
 
@@ -306,7 +426,7 @@ class Personagem {
 
 }
 
-public class questao3 {
+public class questao11 {
 
     public static void preencherVetor(Personagem[] personagens){
         String line;
@@ -340,24 +460,102 @@ public class questao3 {
         }
     }
 
+    public static void swap(ListPersonagens lista, int i, int j){
+        Personagem tmpPersonagem = lista.getPersonagem(i);
+        
+        Celula tmp = lista.primeiro.prox;
+        for(int k = 0; k < i; k++, tmp = tmp.prox);
+        tmp.personagem = lista.getPersonagem(j);
+
+        tmp = lista.primeiro.prox;
+        for(int k = 0; k < j; k++, tmp = tmp.prox);
+        tmp.personagem = tmpPersonagem;
+    }
+
+    public static void QuickSort(ListPersonagens lista, int esq, int dir,int[] comp_mov) {
+        int i = esq;
+        int j = dir;
+
+        Personagem pivo = lista.getPersonagem((esq+dir)/2);
+
+        while( i <= j){
+            while(lista.getPersonagem(i).getHouse().compareTo(pivo.getHouse()) <= 0){
+                if(lista.getPersonagem(i).getHouse().compareTo(pivo.getHouse()) == 0){
+                    if(lista.getPersonagem(i).getName().compareTo(pivo.getName()) < 0){
+                        i++;
+                        comp_mov[0] += 3;
+                    }else{
+                        comp_mov[0] +=3;
+                        break;
+                    }
+                }else{
+                    i++;
+                    comp_mov[0] +=2 ;
+                }
+            }
+    
+            while(lista.getPersonagem(j).getHouse().compareTo(pivo.getHouse()) >= 0){
+                if(lista.getPersonagem(j).getHouse().compareTo(pivo.getHouse()) == 0){
+                    if(lista.getPersonagem(j).getName().compareTo(pivo.getName()) > 0){
+                        j--;
+                        comp_mov[0] +=3;
+                    }else{
+                        comp_mov[0] +=3;
+                        break;
+                    }
+                }else{
+                    j--;
+                    comp_mov[0] +=2;
+                }
+            }
+    
+            if(i <= j){
+                swap(lista, i, j);
+                i++;
+                j--;
+                comp_mov[1] += 3;
+            }
+        }
+
+        if( i < dir ){
+            QuickSort(lista,i,dir,comp_mov);
+        }
+
+        if(j > esq){
+            QuickSort(lista, esq, j,comp_mov);
+        }
+    }
+
+    public static void log(long tempoExecucao,int comparacoes, int movimentacoes){
+        File log = new File("824007_quickSort2_java.txt");
+        double segundos =tempoExecucao / 1_000_000_000.0;
+
+        try{
+            PrintWriter writer = new PrintWriter( new FileWriter(log, true));
+            writer.println("824007\t"+comparacoes+"\t"+movimentacoes+"\t"+segundos);
+            writer.close();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         Personagem[] personagens = new Personagem[405];
         preencherVetor(personagens);
+        int[] comp_mov = {0,0};
 
         //Inicialização lista de personagens
-        PilhaPersonagens pilha = new PilhaPersonagens();
+        ListPersonagens lista = new ListPersonagens();
 
         String id;
-        int numComands;
-        String comando;
 
         id = sc.nextLine();
         while(id.equals("FIM") != true){
             for(int i = 0; i < 405; i++){
                 if(personagens[i].getId().equals(id)){
                     try {
-                        pilha.inserir(personagens[i]); //inserção dos personagens correspondentes as entradas na lista
+                        lista.inserirFim(personagens[i]); //inserção dos personagens correspondentes as entradas na lista
                         i = 410;
                     } catch (Exception e) {
                         System.err.println(e);
@@ -367,43 +565,21 @@ public class questao3 {
             id = sc.nextLine();
         }
 
-        numComands = sc.nextInt();
-        sc.nextLine();
+        long inicio = System.nanoTime();
 
-        for(int i = 0; i < numComands; i++){
-            comando = sc.nextLine();
-            String[] divComando = comando.split(" ");
+        QuickSort(lista, 0, lista.tamanho() - 1, comp_mov);
 
-            if(divComando[0].equals("I")){
-                for(int j = 0; j < 405; j++){
-                    if(personagens[j].getId().equals(divComando[1])){
-                        try {
-                            pilha.inserir(personagens[j]); //inserção dos personagens correspondentes as entradas na lista
-                            j = 410;
-                        } catch (Exception e) {
-                            System.err.println(e);
-                        }
-                    }
-                }
-            }
+        long fim = System.nanoTime();
+        
+        long tempoExecucao = fim - inicio;
+        
+        log(tempoExecucao, comp_mov[0], comp_mov[1]);
 
-            if(divComando[0].equals("R")){
-                try {
-                    Personagem tmp = pilha.remover();
-                    System.out.println("(R) "+ tmp.getName());
-                } catch (Exception e) {
-                    // TODO: handle exception
-                    System.err.println(e);
-                }
-                
-            }
-
-        }
-
-
-        pilha.imprimir();
+        lista.imprimir();
 
         sc.close();
     }
 
 }
+
+

@@ -56,10 +56,10 @@ class Celula{
     }
 }
 
-class ListPersonagens {
+class PilhaPersonagens {
     private Celula topo;
 
-    ListPersonagens(){
+    PilhaPersonagens(){
         topo = null;
     }
 
@@ -93,11 +93,11 @@ class ListPersonagens {
 
     public void imprimir(){
         int cont = 0;
-        System.out.println("[Top]");
+        System.out.println("[ Top ]");
         for(Celula i = topo; i != null; i = i.prox, cont++){
            System.out.println("["+ cont +" "+ i.personagem.getAtributoString());
         }
-        System.out.println("[Bottom]");
+        System.out.println("[ Bottom ]");
     }
 }
 
@@ -366,7 +366,7 @@ public class questao6 {
         preencherVetor(personagens);
 
         //Inicialização lista de personagens
-        ListPersonagens lista = new ListPersonagens();
+        PilhaPersonagens pilha = new PilhaPersonagens();
 
         String id;
         int numComands;
@@ -377,7 +377,7 @@ public class questao6 {
             for(int i = 0; i < 405; i++){
                 if(personagens[i].getId().equals(id)){
                     try {
-                        lista.inserir(personagens[i]); //inserção dos personagens correspondentes as entradas na lista
+                        pilha.inserir(personagens[i]); //inserção dos personagens correspondentes as entradas na lista
                         i = 410;
                     } catch (Exception e) {
                         System.err.println(e);
@@ -398,7 +398,7 @@ public class questao6 {
                 for(int j = 0; j < 405; j++){
                     if(personagens[j].getId().equals(divComando[1])){
                         try {
-                            lista.inserir(personagens[j]); //inserção dos personagens correspondentes as entradas na lista
+                            pilha.inserir(personagens[j]); //inserção dos personagens correspondentes as entradas na lista
                             j = 410;
                         } catch (Exception e) {
                             System.err.println(e);
@@ -410,7 +410,7 @@ public class questao6 {
             
             if(divComando[0].equals("R")){
                 try {
-                    Personagem tmp = lista.remover();
+                    Personagem tmp = pilha.remover();
                     System.out.println("(R) "+ tmp.getName());
                 } catch (Exception e) {
                     // TODO: handle exception
@@ -422,7 +422,7 @@ public class questao6 {
         }
 
 
-        lista.imprimir();
+        pilha.imprimir();
 
         sc.close();
     }
